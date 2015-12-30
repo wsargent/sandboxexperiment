@@ -4,9 +4,13 @@ name := """sandboxexperiment"""
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion in ThisBuild := "2.11.7"
 
-lazy val sandbox = (project in file("sandbox"))
+lazy val sandbox = (project in file("sandbox")).settings {
+  libraryDependencies ++= Seq(
+    "org.slf4j" % "slf4j-api" % "1.7.13"
+  )
+}
 
 lazy val core = (project in file("core")).enablePlugins(BuildInfoPlugin).settings(
   libraryDependencies ++= Seq(

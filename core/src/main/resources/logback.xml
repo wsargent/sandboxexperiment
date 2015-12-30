@@ -25,7 +25,7 @@
         </filter>
         <file>${application.home:-..}/logs/application.log</file>
         <encoder>
-            <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
+            <pattern>%date [%level] [%marker] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
     </appender>
 
@@ -51,7 +51,7 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <root level="DEBUG">
+    <root level="TRACE">
         <appender-ref ref="ASYNCFILE" />
         <appender-ref ref="ASYNCSTDOUT" />
         <appender-ref ref="SECURITY" />
