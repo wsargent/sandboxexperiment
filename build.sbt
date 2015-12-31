@@ -22,7 +22,8 @@ lazy val core = (project in file("core")).enablePlugins(BuildInfoPlugin).setting
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.4",
     "net.logstash.logback" % "logstash-logback-encoder" % "4.5.1"
   ),
-  fork := true // must fork to avoid SBT's security manager
+  fork := true, // must fork to avoid SBT's security manager
+  javaOptions := Seq("-Djava.security.debug=all")
 ).settings(
   buildInfoKeys := Seq(BuildInfoKey.map(exportedProducts in(sandbox, Runtime)) {
     case (_, classFiles) =>
