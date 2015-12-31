@@ -30,9 +30,7 @@ class SandboxPolicy(scriptName: String) extends Policy {
   // this give us AllPermission
   private val providerDomain = {
     val p = this
-    DoPrivilegedAction() {
-      p.getClass.getProtectionDomain
-    }(AccessController.getContext)
+    AccessController.doPrivileged(DoPrivilegedAction(p.getClass.getProtectionDomain))
   }
 
   private val logger = org.slf4j.LoggerFactory.getLogger(this.getClass)

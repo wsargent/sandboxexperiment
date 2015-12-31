@@ -27,7 +27,8 @@ class SandboxClassLoader(parent:ClassLoader) extends URLClassLoader(BuildInfo.sa
 
 object SandboxClassLoader {
 
-  val forbiddenClasses: Seq[String] =
+
+  val miscClasses =
     """
       |java.io.ObjectInputStream
       |java.io.ObjectOutputStream
@@ -38,7 +39,7 @@ object SandboxClassLoader {
       |javax.sql.rowset.serial.SerialJavaObject
     """.stripMargin.split("\n")
 
-  // a bit extreme
+  // a bit extreme, but see http://www.security-explorations.com/materials/se-2014-02-report.pdf
   val javaClasses =
     """java.lang.Class
       |java.lang.ClassLoader
@@ -48,4 +49,7 @@ object SandboxClassLoader {
       |java.lang.reflect.Constructor
       |java.lang.reflect.Method
     """.stripMargin.split("\n")
+
+  val forbiddenClasses: Seq[String] = javaClasses ++ miscClasses
+
 }

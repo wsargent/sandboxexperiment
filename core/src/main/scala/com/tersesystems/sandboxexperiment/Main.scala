@@ -15,8 +15,8 @@ object Main {
 
   private val logger = LoggerFactory.getLogger(Main.getClass)
 
-  //private val className = "com.tersesystems.sandboxexperiment.sandbox.ReducedPrivilegeScriptRunner"
-  private val className = "com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner"
+  private val className = "com.tersesystems.sandboxexperiment.sandbox.ScriptRunner"
+  //private val className = "com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner"
 
   def main(args: Array[String]) {
     val sm = System.getSecurityManager
@@ -44,9 +44,23 @@ object Main {
   }
 
   private def createSandboxClassLoader: SandboxClassLoader = {
-    DoPrivilegedAction(new RuntimePermission("createClassLoader")) {
-      new SandboxClassLoader(this.getClass.getClassLoader)
-    }(AccessController.getContext)
+    // http://www.oracle.com/technetwork/java/seccodeguide-139067.html#9
+    // Guideline 9-3 / ACCESS-3: Safely invoke java.security.AccessController.doPrivileged
+
+    // You'd think we could call doPrivileged inside some nice lambda, but NO.  It's a security hole,
+    // because the security check is stack-based.
+    //
+    // https://docs.oracle.com/javase/8/docs/technotes/guides/security/doprivileged.html
+    // "Also note that the call to doPrivileged should be made in the code that wants to enable its privileges."
+    // "Do not be tempted to write a utility class that itself calls doPrivileged as that could lead to security holes."
+
+    AccessController.doPrivileged(
+      DoPrivilegedAction {
+        new SandboxClassLoader(this.getClass.getClassLoader)
+      },
+      AccessController.getContext,
+      new RuntimePermission("createClassLoader")
+    )
   }
 
   /**
