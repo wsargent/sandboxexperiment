@@ -1,33 +1,37 @@
 package com.tersesystems.sandboxexperiment.sandbox
 
-import java.net.URL
 import java.security._
-import java.security.cert.Certificate
 
-/**
-  * Created by wsargent on 12/30/15.
-  */
 class ReducedPrivilegeScriptRunner extends Executor {
 
   def run() = {
-    // grant NO permissions, this should do nothing at all...
-    val perms = new Permissions()
-
-    val classLoader: ClassLoader = null
-    val url: URL = null
-    val certs: Array[Certificate] = Array[Certificate]()
-    val principals: Array[Principal] = Array[Principal]()
-    val domain = new ProtectionDomain(new CodeSource(url, certs), perms, classLoader, principals)
-    val reducedContext = new AccessControlContext(Array(domain))
 
     val cwd = System.getProperty("user.dir")
-    val script = s"${cwd}/../testscript.sh"
+    val scriptName = s"${cwd}/../testscript.sh"
+    val perm = new java.io.FilePermission(scriptName, "execute")
 
+    AccessController.checkPermission(perm)
+    val perms = perm.newPermissionCollection()
+    //perms.add(perm)
+
+    // will cause NPE in ProtectionDomain!
+    //    val classLoader: ClassLoader = null
+    //    val url: URL = null
+    //    val certs: Array[Certificate] = Array[Certificate]()
+    //    val principals: Array[Principal] = Array[Principal]()
+    //    val domain = new ProtectionDomain(new CodeSource(url, certs), perms, classLoader, principals)
+    //    val reducedContext = new AccessControlContext(Array(domain))
+
+    // http://www.oracle.com/technetwork/java/seccodeguide-139067.html#9
+    // Guideline 9-4
+    // This SHOULD reduce privileges.
+    val reducedContext = new AccessControlContext(Array(new ProtectionDomain(null, perms)))
     val action = new PrivilegedExceptionAction[String]() {
       override def run(): String = {
-        execute(script)
+        execute(scriptName)
       }
     }
+
     java.security.AccessController.doPrivileged(action, reducedContext)
   }
 

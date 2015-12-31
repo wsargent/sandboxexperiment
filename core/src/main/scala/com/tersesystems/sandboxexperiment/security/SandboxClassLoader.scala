@@ -14,12 +14,38 @@ import java.net.URLClassLoader
  * is located in, so we don't have to explicitly jar it up.
  */
 class SandboxClassLoader(parent:ClassLoader) extends URLClassLoader(BuildInfo.sandbox.toArray, parent) {
+  import SandboxClassLoader._
 
   override def loadClass(name: String, resolve: Boolean): Class[_] = {
-    if ("java.io.ObjectInputStream".equals(name)) {
+    if (forbiddenClasses.contains(name)) {
       throw new IllegalArgumentException("This functionality is disabled")
     }
     super.loadClass(name, resolve)
   }
 
+}
+
+object SandboxClassLoader {
+
+  val forbiddenClasses: Seq[String] =
+    """
+      |java.io.ObjectInputStream
+      |java.io.ObjectOutputStream
+      |java.io.ObjectStreamField
+      |java.io.ObjectStreamClass
+      |java.util.logging.Logger
+      |java.sql.DriverManager
+      |javax.sql.rowset.serial.SerialJavaObject
+    """.stripMargin.split("\n")
+
+  // a bit extreme
+  val javaClasses =
+    """java.lang.Class
+      |java.lang.ClassLoader
+      |java.lang.Package
+      |java.lang.invoke.MethodHandleProxies
+      |java.lang.reflect.Proxy
+      |java.lang.reflect.Constructor
+      |java.lang.reflect.Method
+    """.stripMargin.split("\n")
 }

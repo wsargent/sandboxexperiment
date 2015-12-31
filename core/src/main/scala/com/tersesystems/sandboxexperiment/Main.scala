@@ -15,7 +15,8 @@ object Main {
 
   private val logger = LoggerFactory.getLogger(Main.getClass)
 
-  private val className = "com.tersesystems.sandboxexperiment.sandbox.ScriptRunner"
+  //private val className = "com.tersesystems.sandboxexperiment.sandbox.ReducedPrivilegeScriptRunner"
+  private val className = "com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner"
 
   def main(args: Array[String]) {
     val sm = System.getSecurityManager
