@@ -1,6 +1,6 @@
-package com.tersesystems.sandboxexperiment.security
+package com.tersesystems.sandboxexperiment.privlib
 
-import java.security.PrivilegedAction
+import java.security.{PrivilegedExceptionAction, PrivilegedAction}
 
 object DoPrivilegedAction {
   def apply[T](actionBody: => T): DoPrivilegedAction[T] = {
@@ -11,4 +11,6 @@ object DoPrivilegedAction {
 class DoPrivilegedAction[T](block: => T) extends PrivilegedAction[T] {
   override def run(): T = block
 }
+
+
 

@@ -7,9 +7,7 @@ import java.io.{ObjectInputStream, ByteArrayInputStream}
   */
 class ObjectDeserializer {
 
-  def run() = deserializedEvil()
-
-  private def deserializedEvil(): String = {
+  def run(): String = {
     val bytes = Array[Byte](20)
     val inputStream = new ByteArrayInputStream(bytes)
     val stream = new ObjectInputStream(inputStream)

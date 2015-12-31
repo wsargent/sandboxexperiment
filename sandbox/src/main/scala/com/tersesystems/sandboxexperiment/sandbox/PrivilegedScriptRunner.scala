@@ -1,32 +1,30 @@
 package com.tersesystems.sandboxexperiment.sandbox
 
-import java.io.FilePermission
+import java.io.{File, FilePermission}
 import java.net.URL
 import java.security._
 import java.security.cert.Certificate
 
-class PrivilegedScriptRunner extends Executor{
+import com.tersesystems.sandboxexperiment.privlib.{DoPrivilegedAction, Executor}
+
+class PrivilegedScriptRunner {
 
   def run() = {
+    // something we shouldn't be able to access.
+    val env = "/usr/bin/env"
+
     // grant expanded permissions
     val perms = new Permissions()
-    perms.add(new FilePermission("/usr/bin/env", "execute"))
+    perms.add(new FilePermission(env, "execute"))
 
+    // We're in the sandbox, so calling doPrivileged does nothing here, because it
+    // looks at its immediate parent... which is PrivilegedScriptRunner.run(), still
+    // in the sandbox.
     val expandedContext = new AccessControlContext(Array(new ProtectionDomain(null, perms)))
-    val action = new PrivilegedExceptionAction[String]() {
-      override def run(): String = {
-        val script = "/usr/bin/env"
-        execute(script)
-      }
+    val action = DoPrivilegedAction {
+      val file = new File(env)
+      Executor.execute(file)
     }
-
-    // We're in the sandbox, so we can't escape from that.
-    //
-    // This is confusing, because
-    // https://docs.oracle.com/javase/8/docs/technotes/guides/security/doprivileged.html#more_privilege
-    // says "Sometimes when coding the current method, you want to temporarily extend the permission of the
-    // calling method to perform an action" and goes on from there.
-    //
     java.security.AccessController.doPrivileged(action, expandedContext)
   }
 

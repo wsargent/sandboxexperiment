@@ -9,7 +9,7 @@
             <OnMismatch>DENY</OnMismatch>
             <OnMatch>ACCEPT</OnMatch>
         </filter>
-        <file>${application.home:-..}/logs/security.log</file>
+        <file>${application.home:-.}/logs/security.log</file>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         </encoder>
     </appender>
@@ -23,7 +23,7 @@
             <OnMismatch>NEUTRAL</OnMismatch>
             <OnMatch>DENY</OnMatch>
         </filter>
-        <file>${application.home:-..}/logs/application.log</file>
+        <file>${application.home:-.}/logs/application.log</file>
         <encoder>
             <pattern>%date [%level] [%marker] from %logger in %thread - %message%n%xException</pattern>
         </encoder>

@@ -3,6 +3,7 @@ package com.tersesystems.sandboxexperiment.security
 import java.security._
 import java.util.PropertyPermission
 
+import com.tersesystems.sandboxexperiment.privlib.DoPrivilegedAction
 import net.logstash.logback.marker.LogstashMarker
 import net.logstash.logback.marker.Markers._
 import org.slf4j.MarkerFactory

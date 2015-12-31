@@ -2,7 +2,7 @@
 
 This is an implementation of sandboxed code using the Java SecurityManager, written in Scala.
 
-It takes inspiration from Jens Nordahl's [Sandboxing plugins in Java](http://www.jayway.com/2014/06/13/sandboxing-plugins-in-java/), although it took some poking to see what the prarameters are.
+It takes inspiration from Jens Nordahl's [Sandboxing plugins in Java](http://www.jayway.com/2014/06/13/sandboxing-plugins-in-java/), although it took some poking to see what the parameters are.
 
 It consists of a Main class that starts up a sandbox, then starts a script from within the sandbox.
 
@@ -26,17 +26,21 @@ If you comment out that line and recompile (or just run `sbt run` again), then y
 
 ## DoPrivilegedAction
 
-Because Scala has closures and implicits, we can do fun things like: 
+You can create a set of library utilities that can operate with code in the sandbox, using the AccessController.doPrivileged method.  Although this is meant to be used with the sandbox, it must be outside of the sandbox itself so that the immediate caller is in the right ProtectionDomain.
+
+Because Scala has closures and magic "apply" method, we can use a cleaner DoPrivilegedAction: 
 
 ```
-implicit val context = AccessController.getContext
-
-private def createSandboxClassLoader: SandboxClassLoader = {
-  DoPrivilegedAction(new RuntimePermission("createClassLoader")) {
-    new SandboxClassLoader(this.getClass.getClassLoader)
+AccessController.doPrivileged(DoPrivilegedAction {
+  if (! canonicalFile.exists()) {
+    throw new IllegalStateException(s"$canonicalFile does not exist!")
   }
-} // context is passed in automatically
+}, AccessController.getContext, new FilePermission(absolutePath, "read"))
 ```
+
+Note that there's no need for a DoPrivilegedExceptionAction, as all exceptions are runtime in Scala.
+
+Unfortunately, the doPrivileged method is magic: it relies on its immediate caller for the security check, and so you can't wrap it in a generally available utility class without giving it the permissions of that utility class.
 
 There's much more that can be done in that area: for example, having typed permissions instead having everything be RuntimePermission.
 
@@ -50,7 +54,7 @@ You don't need all the logging information, but it does show how you'd log infor
 
 It's not as bad as it looks, but it is not well laid out for application developers.  This system was originally designed for applets, so it makes sense that it assumes discrete packaging.  The tough bit is adding all the permissions to the sandbox.
 
-If you have an existing application and you just want to blacklist some operations, you can use [Pro-Grade](http://pro-grade.sourceforge.net/) as an [easy way to secure applications])(https://tersesystems.com/2015/12/22/an-easy-way-to-secure-java-applications/).
+If you have an existing application and you just want to blacklist some operations, you can use [Pro-Grade](http://pro-grade.sourceforge.net/) as an [easy way to secure applications](https://tersesystems.com/2015/12/22/an-easy-way-to-secure-java-applications/).
 
 ## Why do it this way?
 
@@ -58,26 +62,10 @@ Because this is the defined way to do it.  Per [Evaluating the Flexibility of th
 
 > Java provides an “orthodox” mechanism to achieve this goal while aligning with intended sandbox usage: a custom class loader that loads untrusted classes into a constrained protection domain. This approach is more clearly correct and enables a self-protecting sandbox.
 
+This example uses a custom security policy rather than a constrained protection domain, but the idea is the same.
+
 ## Limitations and Warnings
 
 Note that the security policy can only distinguish by code location (packaging) and by class loader (which means URLClassLoader, which also means packaging).  This means that you probably need to package sandbox code in a different jar -- I have been completely unable to effectively sandbox code that was in the same package. 
 
 There are notes about the ProtectionDomain in the Java Security book that suggest that packaging sandboxed code together with the Main, "AllPermissions" class is a Bad Idea and will compromise the system, so this is probably for the best.
-  
-## Restricting Classes
-
-Because the policy only looks at location and classloader, if you want to forbid a specific class, like java.io.ObjectInputStream, then you have to do that from inside the classloader.
-
-```
-class SandboxClassLoader(parent:ClassLoader) extends URLClassLoader(sandboxCodeLocation, parent) {
-
-  override def loadClass(name: String, resolve: Boolean): Class[_] = {
-    if ("java.io.ObjectInputStream".equals(name)) {
-      throw new IllegalArgumentException("This functionality is disabled")
-    }
-    super.loadClass(name, resolve)
-  }
-
-}
-```
-
