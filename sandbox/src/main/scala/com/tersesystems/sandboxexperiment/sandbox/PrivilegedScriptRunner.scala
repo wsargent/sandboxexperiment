@@ -10,22 +10,24 @@ class PrivilegedScriptRunner extends Executor{
   def run() = {
     // grant expanded permissions
     val perms = new Permissions()
-    perms.add(new FilePermission("<<ALL FILES>>", "execute"))
+    perms.add(new FilePermission("/usr/bin/env", "execute"))
 
-    val classLoader: ClassLoader = null
-    val url: URL = null
-    val certs: Array[Certificate] = Array[Certificate]()
-    val principals: Array[Principal] = Array[Principal]()
-    val domain = new ProtectionDomain(new CodeSource(url, certs), perms, classLoader, principals)
-    val reducedContext = new AccessControlContext(Array(domain))
-
+    val expandedContext = new AccessControlContext(Array(new ProtectionDomain(null, perms)))
     val action = new PrivilegedExceptionAction[String]() {
       override def run(): String = {
         val script = "/usr/bin/env"
         execute(script)
       }
     }
-    java.security.AccessController.doPrivileged(action, reducedContext)
+
+    // We're in the sandbox, so we can't escape from that.
+    //
+    // This is confusing, because
+    // https://docs.oracle.com/javase/8/docs/technotes/guides/security/doprivileged.html#more_privilege
+    // says "Sometimes when coding the current method, you want to temporarily extend the permission of the
+    // calling method to perform an action" and goes on from there.
+    //
+    java.security.AccessController.doPrivileged(action, expandedContext)
   }
 
 }

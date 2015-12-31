@@ -16,6 +16,7 @@ object Main {
   private val logger = LoggerFactory.getLogger(Main.getClass)
 
   private val className = "com.tersesystems.sandboxexperiment.sandbox.ScriptRunner"
+  //private val className = "com.tersesystems.sandboxexperiment.sandbox.PrivilegedScriptRunner"
   //private val className = "com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner"
 
   def main(args: Array[String]) {
@@ -55,9 +56,7 @@ object Main {
     // "Do not be tempted to write a utility class that itself calls doPrivileged as that could lead to security holes."
 
     AccessController.doPrivileged(
-      DoPrivilegedAction {
-        new SandboxClassLoader(this.getClass.getClassLoader)
-      },
+      DoPrivilegedAction(new SandboxClassLoader(this.getClass.getClassLoader)),
       AccessController.getContext,
       new RuntimePermission("createClassLoader")
     )
