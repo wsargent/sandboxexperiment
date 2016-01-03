@@ -41,7 +41,10 @@ lazy val security = (project in file("security")).enablePlugins(BuildInfoPlugin)
 lazy val root = (project in file(".")).settings(
   // uncomment this line for lots of internal security data
   // javaOptions := Seq("-Djava.security.debug=all")
-).aggregate(security, sandbox).dependsOn(sandbox, security)
+).aggregate(security).dependsOn(security) // sandbox must NOT be part of the build stack,
+
+// If you see that your sandbox classes are missing, hit it from here...
+addCommandAlias("compileSandbox", ";project sandbox ;compile ;project root")
 
 addCommandAlias("runThread", "run com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner")
 addCommandAlias("runDeserializer", "run com.tersesystems.sandboxexperiment.sandbox.ObjectDeserializer")

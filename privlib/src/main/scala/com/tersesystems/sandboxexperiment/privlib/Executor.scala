@@ -15,10 +15,12 @@ object Executor {
     // make clear we're the stopping point for security checking.
     // This does give away the information that the file EXISTS to a malicious attacker.
     AccessController.doPrivileged(DoPrivilegedAction {
+      //System.out.println(s"Executor.getProtectionDomain = ${this.getClass.getProtectionDomain}")
+
       if (! canonicalFile.exists()) {
         throw new IllegalStateException(s"$canonicalFile does not exist!")
       }
-    }, AccessController.getContext, new FilePermission(absolutePath, "read"))
+    })
 
     // This DOESN'T run with enhanced privileges, so the AccessController looks through
     // the entire stack, not stopping with this execute method.  If the sandbox is in the stack
