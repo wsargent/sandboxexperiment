@@ -77,14 +77,15 @@ object Main extends SandboxCheck {
   }
 
   private def runSandboxInDifferentThread(className: String): Unit = {
-    val t = new SandboxThread(className)
+    val tg = new ThreadGroup("sandbox-thread-group")
+    val t = new SandboxThread(tg, className)
     t.start()
     t.join()
   }
 
 }
 
-class SandboxThread(className: String) extends Thread(new SandboxRunnable(className), "sandbox-thread")
+class SandboxThread(threadGroup: ThreadGroup, className: String) extends Thread(threadGroup, new SandboxRunnable(className), "sandbox-thread")
 
 class SandboxRunnable(className: String) extends Runnable with SandboxCheck {
 
