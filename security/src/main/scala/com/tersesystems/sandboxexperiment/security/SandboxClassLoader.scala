@@ -22,8 +22,6 @@ class SandboxClassLoader(parent: ClassLoader) extends URLClassLoader(BuildInfo.s
   import SandboxClassLoader._
 
   override def loadClass(name: String, resolve: Boolean): Class[_] = {
-    // println(s"loadClass: name = ${name}, resolve = $resolve")
-
     if (forbiddenClasses.contains(name)) {
       throw new IllegalArgumentException("This functionality is disabled")
     }
