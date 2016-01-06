@@ -2,16 +2,18 @@ package com.tersesystems.sandboxexperiment
 
 import java.security._
 
-import com.tersesystems.sandboxexperiment.security.{SandboxClassLoader, SandboxSecurityManager}
+import com.tersesystems.sandboxexperiment.security.{Sandbox, SandboxSecurityManager}
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.Future
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 /**
   * The main entry point.  Starts up a security manager, then runs a script
   * in a sandboxed class loader.
   */
-object Main extends SandboxCheck {
+object Main {
 
   private val logger = LoggerFactory.getLogger(Main.getClass)
 
@@ -29,97 +31,57 @@ object Main extends SandboxCheck {
     }
 
     val sm = System.getSecurityManager
-    if (sm == null) {
-      val homeDir = System.getProperty("user.dir")
-      val scriptName = s"$homeDir/testscript.sh"
-      logger.info("Starting security manager in the code")
-      System.setSecurityManager(new SandboxSecurityManager(scriptName))
-    } else {
+    if (sm != null) {
       logger.error(s"Predefined security manager $sm, exiting")
       System.exit(-1)
     }
 
-    val useThread = true
-    if (useThread) {
-      runSandboxInDifferentThread(className)
-    } else {
-      try {
-        runSandboxCodeInSameThread(className)
-      } catch {
-        case e: AccessControlException =>
-          logger.error("Cannot run untrusted code", e)
-        case NonFatal(e) =>
-          logger.error("Unexpected error", e)
-        case other: Throwable =>
-          logger.error("Don't know what happened", other)
+    val homeDir = System.getProperty("user.dir")
+    val scriptName = s"$homeDir/testscript.sh"
+    logger.info("Starting security manager in the code")
+    System.setSecurityManager(new SandboxSecurityManager(scriptName))
+
+    val useThread = false
+    try {
+      if (useThread) {
+        runInDifferentThread(className)
+      } else {
+        runInSameThread(className)
       }
-    }
-
-  }
-
-  /**
-    * Uses reflection to instantiate the class which will try to execute shell code.
-    */
-  private def runSandboxCodeInSameThread(className: String): Unit = {
-    // Use a custom class loader to isolate the code...
-    val sandboxClassLoader = createSandboxClassLoader
-    val scriptRunnerClass = sandboxClassLoader.loadClass(className)
-    val method = scriptRunnerClass.getMethod("run")
-    val scriptRunnerInstance = scriptRunnerClass.newInstance()
-    checkClassLoader(scriptRunnerInstance.getClass)
-    try {
-      val result = method.invoke(scriptRunnerInstance).asInstanceOf[String]
-      logger.info(s"result = $result")
     } catch {
-      case e: java.lang.reflect.InvocationTargetException =>
-        throw e.getCause
+      case e: AccessControlException =>
+        logger.error("Cannot run untrusted code", e)
+      case NonFatal(e) =>
+        logger.error("Unexpected error", e)
+      case other: Throwable =>
+        logger.error("Don't know what happened", other)
     }
   }
 
-  private def runSandboxInDifferentThread(className: String): Unit = {
-    val tg = new ThreadGroup("sandbox-thread-group")
-    val t = new SandboxThread(tg, className)
-    t.start()
-    t.join()
-  }
+  private def runInDifferentThread(className: String): Unit = {
+    // Set up an execution context from a thread pool
+    implicit val sandboxExecutionContext = {
+      import java.util.concurrent.Executors
 
-}
+      import scala.concurrent._
+      val numWorkers = sys.runtime.availableProcessors
+      val pool = Executors.newFixedThreadPool(numWorkers)
+      ExecutionContext.fromExecutorService(pool)
+    }
 
-class SandboxThread(threadGroup: ThreadGroup, className: String) extends Thread(threadGroup, new SandboxRunnable(className), "sandbox-thread")
-
-class SandboxRunnable(className: String) extends Runnable with SandboxCheck {
-
-  private val logger = LoggerFactory.getLogger(this.getClass)
-
-  def run() = {
-    val cl = createSandboxClassLoader
-    val sandboxClass = cl.loadClass(className)
-    val method = sandboxClass.getMethod("run")
-    val scriptRunnerInstance = sandboxClass.newInstance()
-    checkClassLoader(scriptRunnerInstance.getClass)
-    try {
-      val result = method.invoke(scriptRunnerInstance).asInstanceOf[String]
-      logger.info(s"result = $result")
-    } catch {
-      case e: java.lang.reflect.InvocationTargetException =>
-        throw e.getCause
+    val future: Future[String] = Sandbox.future[String](className)
+    future.onComplete {
+      case Success(result) =>
+        logger.info(s"result = ${result}")
+        System.exit(0)
+      case Failure(e) =>
+        logger.error(e.getMessage, e)
+        System.exit(-1)
     }
   }
 
-}
-
-trait SandboxCheck {
-
-  def checkClassLoader(clazz: Class[_]) = {
-    val cl = clazz.getClassLoader
-    val clString = cl.getClass.getCanonicalName
-    if (!clString.equals("com.tersesystems.sandboxexperiment.security.SandboxClassLoader")) {
-      throw new IllegalStateException(s"Sandbox leak: incorrect classloader!")
-    }
+  private def runInSameThread(className: String): Unit = {
+    val result = Sandbox.blocking[String](className)
+    logger.info(s"result = ${result}")
   }
-
-  def createSandboxClassLoader: SandboxClassLoader = {
-    new SandboxClassLoader(this.getClass.getClassLoader)
-  }
-
 }
