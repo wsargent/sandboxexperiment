@@ -2,6 +2,7 @@ package com.tersesystems.sandboxexperiment
 
 import java.security._
 
+import com.tersesystems.sandboxexperiment.privlib.{DoPrivilegedAction, Unprivileged}
 import com.tersesystems.sandboxexperiment.security.{Sandbox, SandboxSecurityManager}
 import org.slf4j.LoggerFactory
 
@@ -41,7 +42,7 @@ object Main {
     logger.info("Starting security manager in the code")
     System.setSecurityManager(new SandboxSecurityManager(scriptName))
 
-    val useThread = false
+    val useThread = true
     try {
       if (useThread) {
         runInDifferentThread(className)

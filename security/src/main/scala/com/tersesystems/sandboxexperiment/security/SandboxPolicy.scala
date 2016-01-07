@@ -31,7 +31,9 @@ class SandboxPolicy(scriptName: String) extends Policy {
   // this give us AllPermission
   private val providerDomain = {
     val p = this
-    AccessController.doPrivileged(DoPrivilegedAction(p.getClass.getProtectionDomain))
+    AccessController.doPrivileged(new PrivilegedAction[ProtectionDomain]() {
+      override def run() = p.getClass.getProtectionDomain
+    })
   }
 
   private val logger = org.slf4j.LoggerFactory.getLogger(this.getClass)
@@ -49,8 +51,9 @@ class SandboxPolicy(scriptName: String) extends Policy {
     } else {
       appPermissions
     }
+
     if (isSandbox(domain)) {
-      logger.info(s"getPermissions: domainPermissions = [${domain.getPermissions}], result = $result")
+      logger.debug(s"getPermissions: domainPermissions = [${domain.getPermissions}], result = $result")
     }
     logger.info(markers(domain), s"getPermissions result = $result")
     result
@@ -66,8 +69,7 @@ class SandboxPolicy(scriptName: String) extends Policy {
     }
 
     if (isSandbox(domain)) {
-      //import scala.collection.JavaConverters._
-      logger.info(s"implies: domainPermissions = [${domain.getPermissions}], permission = [$permission], result = $isImplied")
+      logger.debug(s"implies: domainPermissions = [${domain.getPermissions}], permission = [$permission], result = $isImplied")
     }
     logger.info(markers(domain, permission), s"implies result = $isImplied")
     isImplied

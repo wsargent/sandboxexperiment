@@ -6,7 +6,7 @@ import java.security.cert.Certificate
 import java.security._
 import java.util.PropertyPermission
 
-import com.tersesystems.sandboxexperiment.privlib.Executor
+import com.tersesystems.sandboxexperiment.privlib.{Unprivileged, Executor}
 
 /**
   * This is a simple program that tries to do something very unsafe.
