@@ -2,7 +2,6 @@ package com.tersesystems.sandboxexperiment
 
 import java.security._
 
-import com.tersesystems.sandboxexperiment.privlib.{DoPrivilegedAction, Unprivileged}
 import com.tersesystems.sandboxexperiment.security.{Sandbox, SandboxSecurityManager}
 import org.slf4j.LoggerFactory
 
