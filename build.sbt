@@ -4,7 +4,7 @@ name := """sandboxexperiment"""
 
 version := "1.0"
 
-scalaVersion in ThisBuild := "2.11.7"
+scalaVersion in ThisBuild := "2.12.6"
 
 fork in ThisBuild := true // must fork to avoid SBT's security manager
 
@@ -16,19 +16,19 @@ lazy val privlib = (project in file("privlib")).settings {
 
 lazy val sandbox = (project in file("sandbox")).settings {
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "1.7.13"
+    "org.slf4j" % "slf4j-api" % "1.7.25"
   )
 }.aggregate(privlib).dependsOn(privlib)
 
 lazy val security = (project in file("security")).enablePlugins(BuildInfoPlugin).settings(
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "1.7.13",
-    "ch.qos.logback" % "logback-core" % "1.1.3",
-    "ch.qos.logback" % "logback-classic" % "1.1.3",
+    "org.slf4j" % "slf4j-api" % "1.7.25",
+    "ch.qos.logback" % "logback-core" % "1.2.3",
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
     "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2",
     "ch.qos.logback.contrib" % "logback-jackson" % "0.1.2",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.4",
-    "net.logstash.logback" % "logstash-logback-encoder" % "4.5.1"
+    "net.logstash.logback" % "logstash-logback-encoder" % "5.1"
   )
 ).settings(
   buildInfoKeys := Seq(BuildInfoKey.map(exportedProducts in(sandbox, Runtime)) {
@@ -49,4 +49,4 @@ addCommandAlias("compileSandbox", ";project sandbox ;compile ;project root")
 addCommandAlias("runThread", "run com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner")
 addCommandAlias("runDeserializer", "run com.tersesystems.sandboxexperiment.sandbox.ObjectDeserializer")
 addCommandAlias("runPrivileged", "run com.tersesystems.sandboxexperiment.sandbox.PrivilegedScriptRunner")
-addCommandAlias("runDeprivileged", "run com.tersesystems.sandboxexperiment.sandbox.ReducedPrivilegeScriptRunner")
+//addCommandAlias("runDeprivileged", "run com.tersesystems.sandboxexperiment.sandbox.ReducedPrivilegeScriptRunner")
