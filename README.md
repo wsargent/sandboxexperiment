@@ -12,6 +12,16 @@ Install SBT ("brew install sbt" or similar package manager).  Then type `sbt run
 
 You may need to change `testscript.sh` to be executable.
 
+In `build.sbt` there are some command aliases that will let you run the code inside of SBT
+
+```
+addCommandAlias("runThread", "run com.tersesystems.sandboxexperiment.sandbox.ThreadSpawner")
+addCommandAlias("runDeserializer", "run com.tersesystems.sandboxexperiment.sandbox.ObjectDeserializer")
+addCommandAlias("runPrivileged", "run com.tersesystems.sandboxexperiment.sandbox.PrivilegedScriptRunner")
+```
+
+i.e. `sbt runThread` which will let you try things as well.
+
 ## How it works
 
 The Java SecurityManager / architecture can prevent sensitive operations (like file execution) to sandboxed code, even if it's a server side application.
