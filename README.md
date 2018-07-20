@@ -79,3 +79,9 @@ This example uses a custom security policy rather than a constrained protection 
 Note that the security policy can only distinguish by code location (packaging) and by class loader (which means URLClassLoader, which also means packaging).  This means that you probably need to package sandbox code in a different jar -- I have been completely unable to effectively sandbox code that was in the same package. 
 
 There are notes about the ProtectionDomain in the Java Security book that suggest that packaging sandboxed code together with the Main, "AllPermissions" class is a Bad Idea and will compromise the system, so this is probably for the best.
+
+## Other projects
+
+Check out https://github.com/johnlcox/sandbox-runtime which uses Byte Buddy for more fine grained permissions.
+
+Check out https://github.com/wsargent/securityfixer for overriding SecurityManager so it can't be overridden.
